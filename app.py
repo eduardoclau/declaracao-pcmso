@@ -8,32 +8,56 @@ import tempfile
 # ---------------------------------
 # Função para gerar o PDF
 # ---------------------------------
-def gerar_pdf(texto, nome_arquivo):
+def gerar_pdf(texto):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        doc = SimpleDocTemplate(tmp.name, pagesize=A4)
+        doc = SimpleDocTemplate(
+            tmp.name,
+            pagesize=A4,
+            rightMargin=40,
+            leftMargin=40,
+            topMargin=40,
+            bottomMargin=40
+        )
+
         styles = getSampleStyleSheet()
         story = []
 
         for linha in texto.split("\n"):
-            story.append(Paragraph(linha, styles["Normal"]))
-            story.append(Spacer(1, 12))
+            if linha.strip() == "":
+                story.append(Spacer(1, 14))
+            else:
+                story.append(Paragraph(linha, styles["Normal"]))
+                story.append(Spacer(1, 10))
 
         doc.build(story)
         return tmp.name
 
 # ---------------------------------
-# Interface Streamlit
+# Configuração da página
 # ---------------------------------
-st.set_page_config(page_title="Declaração PCMSO - PDF", layout="centered")
-st.title("📄 Gerador de Declaração PCMSO (PDF)")
+st.set_page_config(
+    page_title="Declaração PCMSO - PDF",
+    layout="centered"
+)
 
+st.title("📄 Gerador de Declaração PCMSO")
+
+# ---------------------------------
+# Seleção do médico
+# ---------------------------------
 medico = st.selectbox(
     "Selecione o médico responsável:",
-    ["Adão Rinede Alves de Almeida", "Odilon Batista Soares"]
+    [
+        "Adão Rinede Alves de Almeida",
+        "Odilon Batista Soares"
+    ]
 )
 
 st.divider()
 
+# ---------------------------------
+# Dados da empresa
+# ---------------------------------
 empresa = st.text_input("Nome da empresa")
 cnpj = st.text_input("CNPJ")
 rua = st.text_input("Rua")
@@ -45,40 +69,57 @@ email = st.text_input("E-mail")
 
 st.divider()
 
+# ---------------------------------
+# Responsável legal
+# ---------------------------------
 responsavel = st.text_input("Nome do responsável legal")
 funcao = st.text_input("Função do responsável")
-cpf = st.text_input("CPF do responsável")
 
-cidade_assinatura = st.text_input("Cidade da assinatura")
-data_assinatura = st.date_input("Data", value=date.today())
+st.divider()
 
 # ---------------------------------
-# Texto da declaração
+# Local e data
+# ---------------------------------
+cidade_assinatura = st.text_input("Cidade da assinatura")
+data_assinatura = st.date_input(
+    "Data da assinatura",
+    value=date.today()
+)
+
+# ---------------------------------
+# Texto conforme médico
 # ---------------------------------
 if medico == "Adão Rinede Alves de Almeida":
     medico_texto = (
         "ADÃO RINEDE ALVES DE ALMEIDA, Médico do Trabalho CRM/SC 8899"
     )
-    arquivo_saida = "Declaracao_PCMSO_Adao.pdf"
+    nome_arquivo = "Declaracao_PCMSO_Adao.pdf"
 else:
     medico_texto = (
         "ODILON BATISTA SOARES, Médico do Trabalho CREMESC 4195 – RQE 3249"
     )
-    arquivo_saida = "Declaracao_PCMSO_Odilon.pdf"
+    nome_arquivo = "Declaracao_PCMSO_Odilon.pdf"
 
 # ---------------------------------
-# Geração
+# Geração do PDF
 # ---------------------------------
-if st.button("📥 Gerar PDF"):
-    texto = f"""
+if st.button("📥 Gerar Declaração em PDF"):
+    if not all([
+        empresa, cnpj, rua, numero, bairro,
+        cidade_empresa, estado, email,
+        responsavel, funcao, cidade_assinatura
+    ]):
+        st.error("⚠️ Preencha todos os campos obrigatórios.")
+    else:
+        texto = f"""
 DECLARAÇÃO
 
 {empresa}, {cnpj}, localizada à {rua}, {numero}, {bairro}, {cidade_empresa},
-{estado}, E-MAIL {email}, representada por {responsavel},
-({funcao} – CPF {cpf}), DECLARO que {medico_texto} é responsável
-pela coordenação e responsabilidade técnica do Programa de Controle
-Médico de Saúde Ocupacional – PCMSO – desta empresa, para fins de informar
-ao Conselho Regional de Medicina de SC – CREMESC, em cumprimento à
+{estado}, E-MAIL {email}, representada por {responsavel}
+({funcao}), DECLARO que {medico_texto} é responsável pela coordenação
+e responsabilidade técnica do Programa de Controle Médico de Saúde
+Ocupacional – PCMSO – desta empresa, para fins de informar ao Conselho
+Regional de Medicina de Santa Catarina – CREMESC, em cumprimento à
 Resolução CFM 2376/2024 art. 3º.
 
 {cidade_assinatura}, {data_assinatura.strftime("%d/%m/%Y")}
@@ -88,14 +129,14 @@ _________________________
 Responsável (ass. digital)
 """
 
-    caminho_pdf = gerar_pdf(texto, arquivo_saida)
+        caminho_pdf = gerar_pdf(texto)
 
-    with open(caminho_pdf, "rb") as pdf:
-        st.download_button(
-            label="⬇️ Baixar PDF",
-            data=pdf,
-            file_name=arquivo_saida,
-            mime="application/pdf"
-        )
+        with open(caminho_pdf, "rb") as pdf:
+            st.download_button(
+                label="⬇️ Baixar PDF",
+                data=pdf,
+                file_name=nome_arquivo,
+                mime="application/pdf"
+            )
 
-    st.success("PDF gerado com sucesso!")
+        st.success("✅ Declaração gerada com sucesso!")
