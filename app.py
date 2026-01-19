@@ -78,13 +78,21 @@ funcao = st.text_input("Função do responsável")
 st.divider()
 
 # ---------------------------------
-# Local e data
+# Local e datas
 # ---------------------------------
 cidade_assinatura = st.text_input("Cidade da assinatura")
+
+data_inicio_responsabilidade = st.date_input(
+    "Data de início da responsabilidade técnica",
+    value=date.today()
+)
+
 data_assinatura = st.date_input(
     "Data da assinatura",
     value=date.today()
 )
+
+st.divider()
 
 # ---------------------------------
 # Texto conforme médico
@@ -118,9 +126,10 @@ DECLARAÇÃO
 {estado}, E-MAIL {email}, representada por {responsavel}
 ({funcao}), DECLARO que {medico_texto} é responsável pela coordenação
 e responsabilidade técnica do Programa de Controle Médico de Saúde
-Ocupacional – PCMSO – desta empresa, para fins de informar ao Conselho
-Regional de Medicina de Santa Catarina – CREMESC, em cumprimento à
-Resolução CFM 2376/2024 art. 3º.
+Ocupacional – PCMSO – desta empresa, com início da responsabilidade
+técnica em {data_inicio_responsabilidade.strftime("%d/%m/%Y")}, para fins
+de informar ao Conselho Regional de Medicina de Santa Catarina – CREMESC,
+em cumprimento à Resolução CFM 2376/2024 art. 3º.
 
 {cidade_assinatura}, {data_assinatura.strftime("%d/%m/%Y")}
 
